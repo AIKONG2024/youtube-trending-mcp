@@ -13,12 +13,7 @@ from datetime import datetime
 class YtDlpTrendingCollector:
     """yt-dlp wrapper for trending video collection"""
     
-    ANIMAL_KEYWORDS = [
-        'cute animals', 'funny pets', 'dog videos', 'cat videos',
-        'wildlife documentary', 'zoo animals', 'pet rescue',
-        'puppy compilation', 'kitten videos', 'animal compilation',
-        'pets playing', 'funny dogs', 'funny cats'
-    ]
+    DEFAULT_KEYWORDS = ['trending', 'viral', 'popular']
     
     CATEGORY_KEYWORDS = {
         "all": [],
@@ -72,7 +67,7 @@ class YtDlpTrendingCollector:
         Returns:
             List of video metadata dictionaries
         """
-        keywords = keywords or self.ANIMAL_KEYWORDS
+        keywords = keywords or self.DEFAULT_KEYWORDS
         all_videos = {}
         
         # Limit keywords to avoid too many requests
@@ -97,7 +92,7 @@ class YtDlpTrendingCollector:
     
     def search_by_category(
         self,
-        category: str = "pets",
+        category: str = "all",
         max_results: int = 50,
         region: str = "US"
     ) -> List[Dict]:

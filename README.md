@@ -96,18 +96,6 @@ Find trending videos by category.
 
 **Example**: "Search for trending pet videos, get me 30 results"
 
-### `search_animal_videos`
-
-Search animal-related content with filters.
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `keywords` | string | `null` | Custom keywords |
-| `max_results` | int | `20` | Number of videos |
-| `min_views` | int | `0` | Minimum view count |
-
-**Example**: "Find animal videos with at least 100,000 views"
-
 ### `search_custom_videos`
 
 Search any topic with custom query.

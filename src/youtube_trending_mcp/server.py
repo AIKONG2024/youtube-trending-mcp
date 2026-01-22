@@ -94,30 +94,7 @@ async def list_tools() -> List[Tool]:
                 }
             }
         ),
-        Tool(
-            name="search_animal_videos",
-            description="Search animal-related videos with keyword filtering and view count threshold.",
-            inputSchema={
-                "type": "object",
-                "properties": {
-                    "keywords": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "description": "Custom search keywords (optional)"
-                    },
-                    "max_results": {
-                        "type": "integer",
-                        "description": "Number of videos to return",
-                        "default": 20
-                    },
-                    "min_views": {
-                        "type": "integer",
-                        "description": "Minimum view count threshold",
-                        "default": 10000
-                    }
-                }
-            }
-        ),
+
         Tool(
             name="get_video_metadata",
             description="Get detailed metadata for a specific YouTube video.",
@@ -141,7 +118,7 @@ async def list_tools() -> List[Tool]:
                     "category": {
                         "type": "string",
                         "description": "Category to collect",
-                        "default": "pets"
+                        "default": "all"
                     },
                     "max_results": {
                         "type": "integer",
@@ -260,12 +237,7 @@ async def call_tool(name: str, arguments: dict) -> List[TextContent]:
                 region=arguments.get("region", "US")
             )
         
-        elif name == "search_animal_videos":
-            result = await search_animal_videos(
-                keywords=arguments.get("keywords"),
-                max_results=arguments.get("max_results", 20),
-                min_views=arguments.get("min_views", 10000)
-            )
+
         
         elif name == "get_video_metadata":
             result = await get_video_metadata(
@@ -274,7 +246,7 @@ async def call_tool(name: str, arguments: dict) -> List[TextContent]:
         
         elif name == "collect_daily_ranking":
             result = await collect_daily_ranking(
-                category=arguments.get("category", "pets"),
+                category=arguments.get("category", "all"),
                 max_results=arguments.get("max_results", 50),
                 save_to_db=arguments.get("save_to_db", True),
                 save_to_json=arguments.get("save_to_json", True)
@@ -355,49 +327,6 @@ async def search_trending_videos(
         }
 
 
-async def search_animal_videos(
-    keywords: Optional[List[str]] = None,
-    max_results: int = 20,
-    min_views: int = 10000
-) -> Dict:
-    """Search animal-related videos"""
-    try:
-        collector = get_ytdlp_collector()
-        video_filter = get_video_filter()
-        
-        # Use default animal keywords if not provided
-        if keywords is None:
-            keywords = collector.ANIMAL_KEYWORDS
-        
-        # Get more videos to filter
-        videos = collector.search_trending(
-            keywords=keywords,
-            max_results=max_results * 2
-        )
-        
-        # Filter by minimum views
-        filtered = video_filter.filter_by_views(
-            videos,
-            min_views=min_views
-        )[:max_results]
-        
-        return {
-            "success": True,
-            "count": len(filtered),
-            "keywords": keywords[:5],  # Show first 5
-            "min_views": min_views,
-            "videos": filtered,
-            "source": "yt-dlp",
-            "collected_at": datetime.now().isoformat()
-        }
-    
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
-
 async def get_video_metadata(video_id: str) -> Dict:
     """Get metadata for specific video"""
     try:
@@ -424,7 +353,7 @@ async def get_video_metadata(video_id: str) -> Dict:
 
 
 async def collect_daily_ranking(
-    category: str = "pets",
+    category: str = "all",
     max_results: int = 50,
     save_to_db: bool = True,
     save_to_json: bool = True

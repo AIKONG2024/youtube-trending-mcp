@@ -1,0 +1,64 @@
+[project]
+name = "youtube-trending-mcp"
+version = "1.0.0"
+description = "MCP server for collecting trending YouTube videos without web scraping"
+authors = [{name = "AIKONG2024"}]
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+keywords = ["mcp", "youtube", "trending", "yt-dlp", "claude", "fastmcp"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "mcp>=1.0.0",
+    "yt-dlp>=2024.11.0",
+    "feedparser>=6.0.0",
+    "pyyaml>=6.0.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/AIKONG2024/youtube-trending-mcp"
+Repository = "https://github.com/AIKONG2024/youtube-trending-mcp"
+Issues = "https://github.com/AIKONG2024/youtube-trending-mcp/issues"
+
+[project.scripts]
+youtube-trending-mcp = "youtube_trending_mcp.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+addopts = "-v --cov=youtube_trending_mcp --cov-report=term"
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]

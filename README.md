@@ -12,11 +12,10 @@ Collect trending YouTube videos without web scraping! This MCP server provides s
 - **No Web Scraping** - Uses yt-dlp's stable API access
 - **No API Keys** - Completely free forever
 - **No Quotas** - Unlimited data collection
-- **Category Filtering** - Pets, Music, Gaming, Entertainment
+- **Category Filtering** - Any topic: Music, Gaming, Cooking, Tech, etc.
 - **Daily Rankings** - Track trending videos over time
 - **RSS Fallback** - Alternative data source
 - **SQLite Storage** - Built-in database support
-- **MCP Compatible** - Works with Claude Desktop, Cline, Cursor, and more
 
 ## Installation
 
@@ -34,9 +33,9 @@ pip install -e .
 
 ## Quick Start
 
-### Claude Desktop
+### Claude Code
 
-Add to your `claude_desktop_config.json`:
+Add to your MCP config:
 
 ```json
 {
@@ -47,21 +46,6 @@ Add to your `claude_desktop_config.json`:
       "env": {
         "DATA_DIR": "/path/to/data"
       }
-    }
-  }
-}
-```
-
-### Cline (VS Code)
-
-Add to your MCP settings:
-
-```json
-{
-  "mcpServers": {
-    "youtube-trending": {
-      "command": "python",
-      "args": ["-m", "youtube_trending_mcp"]
     }
   }
 }
@@ -82,97 +66,146 @@ Add to `~/.cursor/mcp.json`:
 }
 ```
 
-## Available Tools
+### OpenAI Codex
 
-### `search_trending_videos`
+```json
+{
+  "mcpServers": {
+    "youtube-trending": {
+      "command": "python",
+      "args": ["-m", "youtube_trending_mcp"],
+      "env": {
+        "DATA_DIR": "./data"
+      }
+    }
+  }
+}
+```
 
-Find trending videos by category.
+## LLM Tool Reference
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `category` | string | `"all"` | Category: `all`, `pets`, `music`, `gaming`, `entertainment` |
-| `max_results` | int | `20` | Number of videos (1-100) |
-| `region` | string | `"US"` | Region code |
+### Tools Overview
 
-**Example**: "Search for trending pet videos, get me 30 results"
+| Tool | Description |
+|------|-------------|
+| `search_trending_videos` | Search trending videos by category |
+| `search_custom_videos` | Search any topic with custom query |
+| `get_video_metadata` | Get detailed metadata for a video |
+| `collect_daily_ranking` | Collect and save daily rankings |
+| `get_youtube_rss_feed` | Fetch RSS feed from channel/playlist |
+| `filter_videos` | Filter videos by views, likes, duration |
 
-### `search_custom_videos`
+### search_trending_videos
 
-Search any topic with custom query.
+```
+Parameters:
+  category: string (default: "all") - "all", "pets", "music", "gaming", "entertainment", or any topic
+  max_results: int (default: 20, range: 1-100)
+  region: string (default: "US") - Country code
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `query` | string | required | Search query |
-| `max_results` | int | `20` | Number of videos |
-| `sort_by` | string | `"relevance"` | Sort: `relevance`, `date`, `views`, `rating` |
+Returns: { success, count, category, videos: [VideoObject] }
+```
 
-**Example**: "Search for cooking tutorial videos"
+### search_custom_videos
 
-### `get_video_metadata`
+```
+Parameters:
+  query: string (required) - Any search term
+  max_results: int (default: 20)
+  min_views: int (default: 0) - Filter by minimum views
+  sort_by: string (default: "relevance") - "relevance", "views", "date"
 
-Get detailed metadata for specific video.
+Returns: { success, query, count, videos: [VideoObject] }
+```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `video_id` | string | YouTube video ID |
+### get_video_metadata
 
-**Example**: "Get details for video dQw4w9WgXcQ"
+```
+Parameters:
+  video_id: string (required) - YouTube video ID (11 chars)
 
-### `collect_daily_ranking`
+Returns: { success, video: VideoObject }
+```
 
-Collect daily trending snapshot and save to database.
+### collect_daily_ranking
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `category` | string | `"all"` | Category to collect |
-| `max_results` | int | `50` | Number of videos |
-| `save_to_db` | bool | `true` | Save to SQLite |
-| `save_to_json` | bool | `true` | Save JSON snapshot |
+```
+Parameters:
+  category: string (default: "all")
+  max_results: int (default: 50)
+  save_to_db: bool (default: true)
+  save_to_json: bool (default: true)
 
-**Example**: "Collect today's top 50 pet videos and save them"
+Returns: { success, count, output_paths: [...] }
+```
 
-### `get_youtube_rss_feed`
+### get_youtube_rss_feed
 
-Fetch RSS feed from channels/playlists.
+```
+Parameters:
+  channel_id: string - Channel ID (starts with "UC...")
+  playlist_id: string - Playlist ID
+  (At least one required)
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `channel_id` | string | YouTube channel ID |
-| `playlist_id` | string | YouTube playlist ID |
+Returns: { success, count, feed_type, videos: [VideoObject] }
+```
 
-**Example**: "Get recent videos from channel UCOpcACMWblDls9Z6GERVi1A"
+### filter_videos
 
-### `filter_videos`
+```
+Parameters:
+  videos: array (required) - List of VideoObjects
+  min_views: int - Minimum view count
+  min_likes: int - Minimum like count
+  max_duration: int - Max duration in seconds
+  exclude_keywords: array - Keywords to exclude
 
-Filter videos by criteria.
+Returns: { success, original_count, filtered_count, videos: [VideoObject] }
+```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `videos` | list | List of videos to filter |
-| `min_views` | int | Minimum view count |
-| `min_likes` | int | Minimum like count |
-| `max_duration` | int | Maximum duration (seconds) |
-| `exclude_keywords` | list | Keywords to exclude |
-
-## Video Metadata Structure
+### VideoObject Schema
 
 ```json
 {
   "video_id": "dQw4w9WgXcQ",
-  "title": "Rick Astley - Never Gonna Give You Up",
-  "channel": "Rick Astley",
+  "title": "Video Title",
+  "channel": "Channel Name",
   "channel_id": "UCuAXFkgsw1L7xaCfnd5JJOw",
   "views": 1500000000,
   "likes": 16000000,
   "upload_date": "20091025",
   "duration": 212,
-  "description": "The official video for...",
+  "description": "Description (max 1000 chars)",
   "categories": ["Music"],
-  "tags": ["rick astley", "never gonna give you up"],
-  "thumbnail": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+  "tags": ["tag1", "tag2"],
+  "thumbnail": "https://i.ytimg.com/vi/.../maxresdefault.jpg",
   "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 }
 ```
+
+### Common Workflows
+
+```python
+# Find popular videos on any topic
+search_custom_videos(query="machine learning", max_results=30, sort_by="views")
+
+# Get trending by category
+search_trending_videos(category="gaming", max_results=50, region="KR")
+
+# Filter results
+videos = search_custom_videos(query="cooking", max_results=100)
+filter_videos(videos=videos, min_views=50000, max_duration=600)
+
+# Save daily rankings
+collect_daily_ranking(category="music", max_results=100)
+```
+
+### Notes
+
+- Video IDs: 11 characters (e.g., `dQw4w9WgXcQ`)
+- Channel IDs: Start with `UC` + 22 characters
+- Duration: In seconds
+- Upload date: `YYYYMMDD` format
 
 ## Why yt-dlp Instead of Web Scraping?
 
@@ -187,63 +220,19 @@ Filter videos by criteria.
 ## Development
 
 ```bash
-# Clone repository
 git clone https://github.com/AIKONG2024/youtube-trending-mcp.git
 cd youtube-trending-mcp
-
-# Install with dev dependencies
 pip install -e ".[dev]"
-
-# Run tests
 pytest tests/ -v
-
-# Run linting
-ruff check src/
-black src/ --check
-```
-
-## Project Structure
-
-```
-youtube-trending-mcp/
-├── pyproject.toml              # Package configuration
-├── README.md                   # This file
-├── LICENSE                     # MIT License
-├── src/
-│   └── youtube_trending_mcp/
-│       ├── __init__.py         # Package exports
-│       ├── __main__.py         # CLI entry point
-│       ├── server.py           # MCP server implementation
-│       ├── ytdlp_collector.py  # yt-dlp wrapper
-│       ├── rss_collector.py    # RSS feed collector
-│       ├── filters.py          # Video filtering
-│       ├── validators.py       # Input validation
-│       └── database.py         # SQLite helper
-└── tests/                      # Test files
 ```
 
 ## Related Projects
 
 - [yt-dlp-mcp](https://github.com/kevinwatt/yt-dlp-mcp) - Download videos and transcripts via MCP
 
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
 ## License
 
 MIT License - see [LICENSE](LICENSE) file for details.
-
-## Credits
-
-Built with:
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) - Video data extraction
-- [MCP](https://modelcontextprotocol.io/) - Model Context Protocol
-- [feedparser](https://github.com/kurtmckee/feedparser) - RSS feed parsing
 
 ---
 
